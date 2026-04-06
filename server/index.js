@@ -1,0 +1,290 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const multer = require('multer');
+const db = require('./db');
+const fs = require('fs');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json());
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir));
+
+// Multer Config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads/'))
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, uniqueSuffix + path.extname(file.originalname))
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// File Upload Endpoint
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
+
+// ==========================================
+// FARMERS API
+// ==========================================
+
+// Get all farmers
+app.get('/api/farmers', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM farmers ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Create a farmer
+app.post('/api/farmers', async (req, res) => {
+  try {
+    const { id, name, username, password, mobile, address, district, status } = req.body;
+    
+    // Basic validation
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const newFarmer = await db.query(
+      'INSERT INTO farmers (id, name, username, password, mobile, address, district, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [id, name, username, password, mobile, address, district, status || 'Pending']
+    );
+    res.json(newFarmer.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') { 
+      if (err.message.includes('farmers_username_key')) {
+        return res.status(409).json({ error: 'Username already exists. Please choose a different one.' });
+      }
+      if (err.message.includes('farmers_pkey')) {
+        return res.status(409).json({ error: 'A conflict occurred with the generated Farmer ID. Please try again.' });
+      }
+      return res.status(409).json({ error: 'This farmer already exists in the system.' });
+    }
+    console.error('Registration Error:', err.message);
+    res.status(500).json({ error: 'An unexpected error occurred during registration' });
+  }
+});
+
+// Farmer Login
+app.post('/api/login', async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+    
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Username/Mobile and password are required' });
+    }
+
+    const result = await db.query(
+      'SELECT * FROM farmers WHERE LOWER(username) = LOWER($1) OR mobile = $1 OR LOWER(id) = LOWER($1)',
+      [identifier]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Record not found. Please check your credentials.' });
+    }
+
+    const farmer = result.rows[0];
+
+    if (farmer.password !== password) {
+      return res.status(401).json({ error: 'Invalid password. Please try again.' });
+    }
+
+    res.json(farmer);
+  } catch (err) {
+    console.error('Login Error:', err.message);
+    res.status(500).json({ error: 'An unexpected error occurred during login' });
+  }
+});
+
+// Update a farmer by id
+app.put('/api/farmers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, username, password, mobile, address, district, status } = req.body;
+    
+    // Dynamically build the update query based on provided fields
+    const fields = [];
+    const values = [];
+    let queryIndex = 1;
+
+    if (name) { fields.push(`name = $${queryIndex++}`); values.push(name); }
+    if (username) { fields.push(`username = $${queryIndex++}`); values.push(username); }
+    if (password) { fields.push(`password = $${queryIndex++}`); values.push(password); }
+    if (mobile) { fields.push(`mobile = $${queryIndex++}`); values.push(mobile); }
+    if (address) { fields.push(`address = $${queryIndex++}`); values.push(address); }
+    if (district) { fields.push(`district = $${queryIndex++}`); values.push(district); }
+    if (status) { fields.push(`status = $${queryIndex++}`); values.push(status); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    values.push(id);
+    const query = `UPDATE farmers SET ${fields.join(', ')} WHERE id = $${queryIndex} RETURNING *`;
+    
+    const updateFarmer = await db.query(query, values);
+    res.json(updateFarmer.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Delete a farmer
+app.delete('/api/farmers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM farmers WHERE id = $1', [id]);
+    res.json('Farmer was deleted');
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+// ==========================================
+// APPLICATIONS API
+// ==========================================
+
+// Get all applications
+app.get('/api/applications', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM applications ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Create an application
+app.post('/api/applications', async (req, res) => {
+  try {
+    const { id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url } = req.body;
+    const newApp = await db.query(
+      `INSERT INTO applications (id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+      [id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status || 'Pending', photo_url, ownership_proof_url]
+    );
+    res.json(newApp.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Update an application status
+app.put('/api/applications/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updateApp = await db.query(
+      'UPDATE applications SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    res.json(updateApp.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+// ==========================================
+// CLAIMS API
+// ==========================================
+
+// Get all claims
+app.get('/api/claims', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM claims ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Create a claim
+app.post('/api/claims', async (req, res) => {
+  try {
+    const { id, application_id, farmer_id, farmer_name, animal_type, reason, status } = req.body;
+    const newClaim = await db.query(
+      `INSERT INTO claims (id, application_id, farmer_id, farmer_name, animal_type, reason, status) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [id, application_id, farmer_id, farmer_name, animal_type, reason, status || 'Pending']
+    );
+    res.json(newClaim.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Update a claim status
+app.put('/api/claims/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updateClaim = await db.query(
+      'UPDATE claims SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    res.json(updateClaim.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+// ==========================================
+// SERVE FRONTEND (React built files)
+// ==========================================
+// Serve static files from the React frontend app
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Catch-all to serve index.html for React Router
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+const runSchema = require('./setup');
+
+// Start server
+async function startServer() {
+  try {
+    await runSchema();
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server due to DB setup error:', err);
+  }
+}
+
+startServer();
+
