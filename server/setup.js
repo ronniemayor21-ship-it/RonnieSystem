@@ -9,9 +9,26 @@ const schema = `
     mobile     TEXT,
     address    TEXT,
     district   TEXT,
+    dob        DATE,
+    gender     TEXT,
+    civil_status TEXT,
     status     TEXT DEFAULT 'Pending',
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
+
+  -- Migration: Add new columns to farmers if they don't exist
+  DO $$ 
+  BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='farmers' AND column_name='dob') THEN
+      ALTER TABLE farmers ADD COLUMN dob DATE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='farmers' AND column_name='gender') THEN
+      ALTER TABLE farmers ADD COLUMN gender TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='farmers' AND column_name='civil_status') THEN
+      ALTER TABLE farmers ADD COLUMN civil_status TEXT;
+    END IF;
+  END $$;
 
   CREATE TABLE IF NOT EXISTS applications (
     id                  VARCHAR(20) PRIMARY KEY,
@@ -24,11 +41,32 @@ const schema = `
     value               NUMERIC,
     start_date          DATE,
     end_date            DATE,
+    purpose             TEXT,
+    breed               TEXT,
+    sex                 TEXT,
+    age                 TEXT,
     status              TEXT DEFAULT 'Pending',
     photo_url           TEXT,
     ownership_proof_url TEXT,
     created_at          TIMESTAMPTZ DEFAULT NOW()
   );
+
+  -- Migration: Add new columns if they don't exist (for existing databases)
+  DO $$ 
+  BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='purpose') THEN
+      ALTER TABLE applications ADD COLUMN purpose TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='breed') THEN
+      ALTER TABLE applications ADD COLUMN breed TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='sex') THEN
+      ALTER TABLE applications ADD COLUMN sex TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='age') THEN
+      ALTER TABLE applications ADD COLUMN age TEXT;
+    END IF;
+  END $$;
 
   CREATE TABLE IF NOT EXISTS claims (
     id             VARCHAR(20) PRIMARY KEY,

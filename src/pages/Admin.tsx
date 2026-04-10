@@ -78,6 +78,9 @@ export default function Admin() {
       mobile: data.get('mobile') as string,
       address: data.get('address') as string,
       district: data.get('district') as string,
+      dob: data.get('dob') as string,
+      gender: data.get('gender') as string,
+      civil_status: data.get('civilStatus') as string,
     };
 
     try {
@@ -504,6 +507,49 @@ export default function Admin() {
                   required
                   className="w-full px-3 py-2 rounded-lg bg-secondary border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm outline-none transition-all"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-foreground">Date of Birth</label>
+                  <input
+                    name="dob"
+                    type="date"
+                    defaultValue={editingFarmer?.dob}
+                    required
+                    className="w-full px-3 py-2 rounded-lg bg-secondary border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-foreground">Gender</label>
+                  <select
+                    name="gender"
+                    defaultValue={editingFarmer?.gender}
+                    required
+                    className="w-full px-3 py-2 rounded-lg bg-secondary border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm outline-none transition-all appearance-none"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">Civil Status</label>
+                <select
+                  name="civilStatus"
+                  defaultValue={editingFarmer?.civilStatus}
+                  required
+                  className="w-full px-3 py-2 rounded-lg bg-secondary border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm outline-none transition-all appearance-none"
+                >
+                  <option value="">Select Status</option>
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Widowed">Widowed</option>
+                  <option value="Separated">Separated</option>
+                </select>
               </div>
               <div className="pt-2 flex gap-3">
                 <button

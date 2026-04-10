@@ -6,6 +6,9 @@ export interface Farmer {
   mobile: string;
   address: string;
   district: string;
+  dob?: string;
+  gender?: string;
+  civilStatus?: string;
   status?: 'Pending' | 'Approved' | 'Rejected';
 }
 
@@ -22,6 +25,10 @@ export interface Application {
   value?: number;
   startDate?: string;
   endDate?: string;
+  purpose?: string;
+  breed?: string;
+  sex?: string;
+  age?: string;
   photoUrl?: string;
   ownershipProofUrl?: string;
 }
@@ -136,6 +143,10 @@ export async function addApplication(app: Omit<Application, 'id' | 'date' | 'sta
     value: app.value,
     start_date: app.startDate,
     end_date: app.endDate,
+    purpose: app.purpose,
+    breed: app.breed,
+    sex: app.sex,
+    age: app.age,
     photo_url: app.photoUrl,
     ownership_proof_url: app.ownershipProofUrl,
     status: 'Pending'
@@ -210,6 +221,9 @@ export async function addFarmer(farmer: Omit<Farmer, 'id'>) {
     id,
     ...farmer,
     password: farmer.password || 'password123',
+    dob: farmer.dob,
+    gender: farmer.gender,
+    civil_status: farmer.civilStatus,
     status: 'Pending'
   };
 

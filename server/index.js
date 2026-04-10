@@ -60,7 +60,7 @@ app.get('/api/farmers', async (req, res) => {
 // Create a farmer
 app.post('/api/farmers', async (req, res) => {
   try {
-    const { id, name, username, password, mobile, address, district, status } = req.body;
+    const { id, name, username, password, mobile, address, district, status, dob, gender, civil_status } = req.body;
     
     // Basic validation
     if (!username || !password) {
@@ -68,8 +68,8 @@ app.post('/api/farmers', async (req, res) => {
     }
 
     const newFarmer = await db.query(
-      'INSERT INTO farmers (id, name, username, password, mobile, address, district, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [id, name, username, password, mobile, address, district, status || 'Pending']
+      'INSERT INTO farmers (id, name, username, password, mobile, address, district, status, dob, gender, civil_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+      [id, name, username, password, mobile, address, district, status || 'Pending', dob, gender, civil_status]
     );
     res.json(newFarmer.rows[0]);
   } catch (err) {
@@ -122,7 +122,8 @@ app.post('/api/login', async (req, res) => {
 app.put('/api/farmers/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, username, password, mobile, address, district, status } = req.body;
+    const { name, username, password, mobile, address, district, status, dob, gender, civil_status, civilStatus } = req.body;
+    const actualCivilStatus = civil_status || civilStatus;
     
     // Dynamically build the update query based on provided fields
     const fields = [];
@@ -136,6 +137,9 @@ app.put('/api/farmers/:id', async (req, res) => {
     if (address) { fields.push(`address = $${queryIndex++}`); values.push(address); }
     if (district) { fields.push(`district = $${queryIndex++}`); values.push(district); }
     if (status) { fields.push(`status = $${queryIndex++}`); values.push(status); }
+    if (dob) { fields.push(`dob = $${queryIndex++}`); values.push(dob); }
+    if (gender) { fields.push(`gender = $${queryIndex++}`); values.push(gender); }
+    if (actualCivilStatus) { fields.push(`civil_status = $${queryIndex++}`); values.push(actualCivilStatus); }
 
     if (fields.length === 0) {
       return res.status(400).json({ error: "No fields to update" });
@@ -183,11 +187,11 @@ app.get('/api/applications', async (req, res) => {
 // Create an application
 app.post('/api/applications', async (req, res) => {
   try {
-    const { id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url } = req.body;
+    const { id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url, purpose, breed, sex, age } = req.body;
     const newApp = await db.query(
-      `INSERT INTO applications (id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
-      [id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status || 'Pending', photo_url, ownership_proof_url]
+      `INSERT INTO applications (id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url, purpose, breed, sex, age) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+      [id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status || 'Pending', photo_url, ownership_proof_url, purpose, breed, sex, age]
     );
     res.json(newApp.rows[0]);
   } catch (err) {
@@ -268,8 +272,10 @@ app.put('/api/claims/:id', async (req, res) => {
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Catch-all to serve index.html for React Router
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+app.use((req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  }
 });
 
 const runSchema = require('./setup');
@@ -287,4 +293,3 @@ async function startServer() {
 }
 
 startServer();
-

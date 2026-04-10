@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { addFarmer, getFarmers } from '@/lib/store';
+import { addFarmer } from '@/lib/store';
 import logo from '@/assets/logo.png';
 
 export default function Register() {
@@ -14,7 +14,10 @@ export default function Register() {
         password: '',
         mobile: '',
         address: '',
-        district: ''
+        district: '',
+        dob: '',
+        gender: '',
+        civilStatus: ''
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -138,6 +141,53 @@ export default function Register() {
                                         placeholder="••••••••"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-emerald-900/60 ml-1">Date of Birth</label>
+                                    <input
+                                        type="date"
+                                        name="dob"
+                                        required
+                                        value={formData.dob}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-xl bg-white/50 border border-border focus:ring-4 focus:ring-primary/10 focus:border-primary text-sm transition-all outline-none"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-emerald-900/60 ml-1">Gender</label>
+                                    <select
+                                        name="gender"
+                                        required
+                                        value={formData.gender}
+                                        onChange={handleChange as any}
+                                        className="w-full px-4 py-3 rounded-xl bg-white/50 border border-border focus:ring-4 focus:ring-primary/10 focus:border-primary text-sm transition-all outline-none appearance-none"
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold uppercase tracking-wider text-emerald-900/60 ml-1">Civil Status</label>
+                                <select
+                                    name="civilStatus"
+                                    required
+                                    value={formData.civilStatus}
+                                    onChange={handleChange as any}
+                                    className="w-full px-4 py-3 rounded-xl bg-white/50 border border-border focus:ring-4 focus:ring-primary/10 focus:border-primary text-sm transition-all outline-none appearance-none"
+                                >
+                                    <option value="">Select Status</option>
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Widowed">Widowed</option>
+                                    <option value="Separated">Separated</option>
+                                </select>
                             </div>
 
                             <button

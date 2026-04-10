@@ -64,6 +64,10 @@ export default function Apply() {
           value: Number(data.get('value')),
           startDate: startDateStr,
           endDate: endDateStr,
+          purpose: data.get('purpose') as string,
+          breed: data.get('breed') as string,
+          sex: data.get('sex') as string,
+          age: data.get('age') as string,
           photoUrl,
           ownershipProofUrl,
         });
@@ -123,6 +127,40 @@ export default function Apply() {
               </div>
               <InputField label="Number of Heads" name="heads" type="number" placeholder="1" required min={1} />
             </div>
+
+            {/* New livestock detail fields */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-card-foreground">Purpose</label>
+                <select
+                  name="purpose"
+                  className="w-full px-3 py-2.5 rounded-lg bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm appearance-none cursor-pointer"
+                >
+                  <option value="Breeding">Breeding</option>
+                  <option value="Dairy">Dairy</option>
+                  <option value="Fattening / Meat">Fattening / Meat</option>
+                  <option value="Draft / Work">Draft / Work</option>
+                  <option value="Egg Production">Egg Production</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+              <InputField label="Breed / Type of Breed" name="breed" placeholder="e.g. Native, Brahman, Landrace" required />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-card-foreground">Sex</label>
+                <select
+                  name="sex"
+                  className="w-full px-3 py-2.5 rounded-lg bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm appearance-none cursor-pointer"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Mixed">Mixed (Male &amp; Female)</option>
+                </select>
+              </div>
+              <InputField label="Age of Animal" name="age" placeholder="e.g. 2 years, 6 months" required />
+            </div>
+
             <InputField label="Estimated Total Value (PHP)" name="value" type="number" placeholder="0.00" required />
             <div className="grid sm:grid-cols-2 gap-4 pt-2">
               <InputField label="Start Date" name="startDate" type="date" required />
