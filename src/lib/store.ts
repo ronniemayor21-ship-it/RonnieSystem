@@ -42,10 +42,12 @@ export interface Claim {
   reason: string;
   date: string;
   status: 'Approved' | 'Pending' | 'Rejected';
+  photoUrl?: string;
 }
 
-const API_URL = 'http://localhost:5000/api';
-const UPLOADS_URL = 'http://localhost:5000';
+const isDevelopment = import.meta.env.MODE === 'development';
+const API_URL = isDevelopment ? 'http://localhost:5000/api' : '/api';
+const UPLOADS_URL = isDevelopment ? 'http://localhost:5000' : '';
 
 let applications: Application[] = [];
 let farmers: Farmer[] = [];
@@ -88,6 +90,7 @@ export async function loadData() {
       farmerId: cl.farmer_id,
       farmerName: cl.farmer_name,
       animalType: cl.animal_type,
+      photoUrl: cl.photo_url ? `${UPLOADS_URL}${cl.photo_url}` : undefined,
       date: new Date(cl.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }));
 
@@ -287,6 +290,7 @@ export async function addClaim(claim: Omit<Claim, 'id' | 'date' | 'status'>) {
     farmer_name: claim.farmerName,
     animal_type: claim.animalType,
     reason: claim.reason,
+    photo_url: claim.photoUrl,
     status: 'Pending'
   };
 

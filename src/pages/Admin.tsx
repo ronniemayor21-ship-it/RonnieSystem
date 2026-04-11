@@ -33,6 +33,7 @@ export default function Admin() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<any>(null);
 
   const totalApplications = applications.length;
   const pendingApplications = applications.filter(a => a.status === 'Pending').length;
@@ -287,7 +288,7 @@ export default function Admin() {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-secondary">
                     <tr>
-                      {['ID', 'App ID', 'Farmer', 'Animal', 'Reason', 'Date', 'Status', 'Actions'].map(h => (
+                      {['ID', 'App ID', 'Farmer', 'Animal', 'Reason', 'Docs', 'Date', 'Status', 'Actions'].map(h => (
                         <th key={h} className={`px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider ${h === 'Actions' ? 'text-right' : ''}`}>
                           {h}
                         </th>
@@ -302,6 +303,18 @@ export default function Admin() {
                         <td className="px-6 py-4 text-sm font-medium text-card-foreground">{claim.farmerName}</td>
                         <td className="px-6 py-4 text-sm text-foreground">{claim.animalType}</td>
                         <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">{claim.reason}</td>
+                        <td className="px-6 py-4">
+                          {claim.photoUrl ? (
+                            <button 
+                              onClick={() => setSelectedClaim(claim)}
+                              className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors flex items-center gap-1 text-[10px] font-bold"
+                            >
+                              <ImageIcon size={14} /> VIEW
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground italic">No Photos</span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 text-xs text-muted-foreground">{claim.date}</td>
                         <td className="px-6 py-4"><StatusBadge status={claim.status} /></td>
                         <td className="px-6 py-4 text-right">
@@ -328,7 +341,7 @@ export default function Admin() {
                     ))}
                     {claims.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="px-6 py-12 text-center text-sm text-muted-foreground italic">
+                        <td colSpan={9} className="px-6 py-12 text-center text-sm text-muted-foreground italic">
                           No claims submitted yet
                         </td>
                       </tr>
@@ -631,6 +644,56 @@ export default function Admin() {
             <div className="p-6 bg-secondary/50 border-t border-border flex justify-end">
               <button
                 onClick={() => setSelectedApp(null)}
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm shadow-primary-glow hover:bg-emerald-800 transition-all"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Claim Photo Viewer Modal */}
+      {selectedClaim && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md animate-fade-in">
+          <div className="bg-card w-full max-w-2xl rounded-3xl shadow-2xl border border-border overflow-hidden animate-zoom-in relative">
+            <div className="p-6 border-b border-border flex justify-between items-center bg-accent/20">
+              <div>
+                <h3 className="font-bold text-lg text-emerald-950">Claim Evidence Document</h3>
+                <p className="text-xs text-muted-foreground">ID: {selectedClaim.id} | Farmer: {selectedClaim.farmerName}</p>
+              </div>
+              <button
+                onClick={() => setSelectedClaim(null)}
+                className="p-2 rounded-full bg-secondary hover:bg-accent text-foreground transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 max-h-[70vh] overflow-y-auto w-full">
+              {/* Photo */}
+              <div className="space-y-3 w-full">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Claim Evidence Photo</h4>
+                {selectedClaim.photoUrl ? (
+                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex items-center justify-center">
+                    <img 
+                      src={selectedClaim.photoUrl} 
+                      alt="Claim Evidence" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400?text=Error+Loading+Image')}
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-stone-50">
+                    No claim evidence photo uploaded
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 bg-secondary/50 border-t border-border flex justify-end">
+              <button
+                onClick={() => setSelectedClaim(null)}
                 className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm shadow-primary-glow hover:bg-emerald-800 transition-all"
               >
                 Done

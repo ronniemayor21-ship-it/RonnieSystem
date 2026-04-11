@@ -235,11 +235,11 @@ app.get('/api/claims', async (req, res) => {
 // Create a claim
 app.post('/api/claims', async (req, res) => {
   try {
-    const { id, application_id, farmer_id, farmer_name, animal_type, reason, status } = req.body;
+    const { id, application_id, farmer_id, farmer_name, animal_type, reason, status, photo_url } = req.body;
     const newClaim = await db.query(
-      `INSERT INTO claims (id, application_id, farmer_id, farmer_name, animal_type, reason, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [id, application_id, farmer_id, farmer_name, animal_type, reason, status || 'Pending']
+      `INSERT INTO claims (id, application_id, farmer_id, farmer_name, animal_type, reason, status, photo_url) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [id, application_id, farmer_id, farmer_name, animal_type, reason, status || 'Pending', photo_url]
     );
     res.json(newClaim.rows[0]);
   } catch (err) {

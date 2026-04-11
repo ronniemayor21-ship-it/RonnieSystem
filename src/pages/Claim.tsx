@@ -11,6 +11,7 @@ export default function Claim() {
     const [loading, setLoading] = useState(false);
     const [refId, setRefId] = useState('');
     const [application, setApplication] = useState<any>(null);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
 
     const farmers = useFarmers();
     const applications = useApplications();
@@ -55,7 +56,16 @@ export default function Claim() {
 
         const submit = async () => {
             try {
-                await addClaim(claimData);
+                let photoUrl;
+                if (photoFile) {
+                    const { uploadFile } = await import('@/lib/store');
+                    photoUrl = await uploadFile(photoFile);
+                }
+
+                await addClaim({
+                    ...claimData,
+                    ...(photoUrl && { photoUrl })
+                });
                 toast.success('Claim submitted successfully!');
                 setLoading(false);
                 navigate('/');
@@ -165,8 +175,19 @@ export default function Claim() {
                                 <label className="text-xs font-medium text-card-foreground">Supporting Evidence (Photos)</label>
                                 <label className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-secondary transition-colors cursor-pointer group">
                                     <Camera size={24} className="text-muted-foreground group-hover:text-primary mb-2 transition-colors" />
-                                    <span className="text-xs text-muted-foreground">Upload photo of the incident or livestock state</span>
-                                    <input type="file" className="hidden" />
+                                    <span className="text-xs text-muted-foreground">
+                                        {photoFile ? photoFile.name : 'Upload photo of the incident or livestock state'}
+                                    </span>
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files[0]) {
+                                                setPhotoFile(e.target.files[0]);
+                                            }
+                                        }}
+                                    />
                                 </label>
                             </div>
 
