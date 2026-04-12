@@ -46,8 +46,8 @@ export interface Claim {
 }
 
 const isDevelopment = import.meta.env.MODE === 'development';
-const API_URL = isDevelopment ? 'http://localhost:5000/api' : '/api';
-const UPLOADS_URL = isDevelopment ? 'http://localhost:5000' : '';
+const API_URL = '/api';
+const UPLOADS_URL = '';
 
 let applications: Application[] = [];
 let farmers: Farmer[] = [];
@@ -97,7 +97,7 @@ export async function loadData() {
     notify();
   } catch (error) {
     console.warn(
-      '⚠️ Could not load data from backend. Is the server running at http://localhost:5000?',
+      '⚠️ Could not load data from backend. Is the server running?',
       error
     );
   }

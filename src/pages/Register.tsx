@@ -111,7 +111,7 @@ export default function Register() {
                                         onChange={handleChange}
                                         className="w-full px-4 py-3 rounded-xl bg-white/50 border border-border focus:ring-4 focus:ring-primary/10 focus:border-primary text-sm transition-all outline-none"
                                         placeholder="Enter district"
-                                    />
+                                    />  
                                 </div>
                             </div>
 

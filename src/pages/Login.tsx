@@ -47,7 +47,7 @@ export default function Login() {
 
         // Default to showing the server error or a generic one
         if (error.message.includes('fetch') || error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
-          toast.error('Cannot connect to backend server. Please run "npm run dev:all" instead of "npm run dev".');
+          toast.error('Cannot connect to the server. Please ensure the backend is running (run "npm run dev").');
         } else {
           toast.error(error.message || 'Login failed');
         }
