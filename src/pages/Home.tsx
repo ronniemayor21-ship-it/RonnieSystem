@@ -6,8 +6,6 @@ export default function Home() {
     <div className="animate-fade-in max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Hero */}
       <div className="grid lg:grid-cols-2 gap-12 items-center py-16 relative overflow-hidden">
-        {/* Decorative background blur */}
-        <div className="absolute top-0 -left-24 w-96 h-96 bg-render-gradient opacity-10 rounded-full blur-3xl -z-10 animate-pulse" />
 
         <div className="space-y-8 relative">
           <div className="flex items-center gap-4">
@@ -48,7 +46,6 @@ export default function Home() {
 
         {/* Hero Illustration */}
         <div className="relative hidden lg:block">
-          <div className="absolute -inset-4 bg-render-gradient opacity-20 rounded-full blur-3xl -z-10 animate-pulse" />
           <img src={logo} alt="Municipality of Dimataling Seal" className="rounded-full shadow-2xl border-4 border-white object-contain w-full max-w-sm mx-auto bg-white/80" />
         </div>
       </div>
