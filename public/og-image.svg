@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a10fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e83de7;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10" />
+      <feOffset dx="0" dy="10" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.5" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)" />
+  
+  <!-- Subtle pattern (Render-inspired mesh/nodes) -->
+  <circle cx="1100" cy="100" r="200" fill="white" opacity="0.05" />
+  <circle cx="100" cy="500" r="150" fill="white" opacity="0.05" />
+  <line x1="0" y1="0" x2="1200" y2="630" stroke="white" stroke-width="1" opacity="0.03" />
+  <line x1="1200" y1="0" x2="0" y2="630" stroke="white" stroke-width="1" opacity="0.03" />
+
+  <!-- Logo Section (Left) -->
+  <g transform="translate(150, 115)" filter="url(#shadow)">
+    <path d="M200 40 L340 90 C340 200 280 300 200 340 C120 300 60 200 60 90 L200 40 Z" fill="#4a10fb" stroke="white" stroke-width="8"/>
+    <path d="M140 160 Q130 140 150 130 Q170 120 190 135 L210 135 Q230 120 250 130 Q270 140 260 160 L260 220 Q260 240 240 240 L160 240 Q140 240 140 220 Z" fill="white" opacity="0.9"/>
+    <text x="200" y="295" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="4">DAIPS</text>
+  </g>
+
+  <!-- Text Section (Right) -->
+  <g transform="translate(550, 315)">
+    <text font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="white" letter-spacing="8">DAIPS</text>
+    <text y="80" font-family="Arial, sans-serif" font-size="32" font-weight="normal" fill="white" opacity="0.9">
+      Dimataling Agriculture Animals
+    </text>
+    <text y="130" font-family="Arial, sans-serif" font-size="32" font-weight="normal" fill="white" opacity="0.9">
+      Insurance Processing System
+    </text>
+    
+    <rect y="180" width="100" height="6" fill="white" rx="3" />
+  </g>
+  
+  <!-- Footer overlay -->
+  <rect y="580" width="1200" height="50" fill="black" opacity="0.2" />
+  <text x="600" y="612" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" opacity="0.7" letter-spacing="2">
+    POWERED BY RENDER • DAIPS OFFICIAL PORTAL
+  </text>
+</svg>

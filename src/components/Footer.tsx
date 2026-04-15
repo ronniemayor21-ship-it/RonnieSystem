@@ -8,7 +8,7 @@ export default function Footer() {
           <img src={logo} alt="Dimataling Seal" className="h-12 w-12 object-contain" />
         </div>
         <p className="text-sm mb-2">© {new Date().getFullYear()} Municipality of Dimataling. All rights reserved.</p>
-        <p className="text-xs text-stone-600">DAAIPS (MVP v1.0)</p>
+        <p className="text-xs text-stone-600">DAIPS (MVP v1.0)</p>
       </div>
     </footer>
   );

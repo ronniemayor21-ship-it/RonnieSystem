@@ -16,15 +16,23 @@ const pool = process.env.DATABASE_URL
       port: process.env.DB_PORT,
     });
 
-// Test connection
+let isConnected = false;
+
+// Test connection with descriptive logging
 pool.connect((err, client, release) => {
   if (err) {
-    return console.error('Error acquiring client', err.stack);
+    console.error('❌ Database connection error:', err.message);
+    if (process.env.DATABASE_URL) {
+      console.error('   Note: Using DATABASE_URL from environment.');
+    }
+    return;
   }
-  console.log('Successfully connected to PostgreSQL Database');
+  isConnected = true;
+  console.log('✅ Successfully connected to PostgreSQL Database');
   release();
 });
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
+  getIsConnected: () => isConnected,
 };

@@ -76,8 +76,17 @@ const schema = `
     animal_type    TEXT,
     reason         TEXT,
     status         TEXT DEFAULT 'Pending',
+    photo_url      TEXT,
     created_at     TIMESTAMPTZ DEFAULT NOW()
   );
+
+  -- Migration: Add photo_url to claims if it doesn't exist
+  DO $$ 
+  BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='claims' AND column_name='photo_url') THEN
+      ALTER TABLE claims ADD COLUMN photo_url TEXT;
+    END IF;
+  END $$;
 `;
 
 async function runSchema() {

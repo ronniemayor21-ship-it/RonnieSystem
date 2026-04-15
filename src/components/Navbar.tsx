@@ -51,7 +51,7 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="Dimataling Seal" className="h-10 w-10 object-contain" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight text-emerald-950">DAAIPS</span>
+              <span className="text-sm font-semibold tracking-tight text-emerald-950">DAIPS</span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Municipality of Dimataling</span>
             </div>
           </Link>

@@ -33,6 +33,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    database: db.getIsConnected() ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString() 
+  });
+});
+
 // File Upload Endpoint
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
@@ -268,12 +277,33 @@ app.put('/api/claims/:id', async (req, res) => {
 // ==========================================
 // SERVE FRONTEND (React built files)
 // ==========================================
-// Serve static files from the React frontend app
-app.use(express.static(path.join(__dirname, '../dist')));
 
-// Catch-all to serve index.html for React Router
+// Hashed assets (JS, CSS) — cache aggressively since filenames change on each build
+app.use('/assets', express.static(path.join(__dirname, '../dist/assets'), {
+  maxAge: '1y',
+  immutable: true,
+}));
+
+// All other static files — no cache to ensure fresh content after deploy
+app.use(express.static(path.join(__dirname, '../dist'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res, filePath) => {
+    // Never cache index.html or other non-hashed files
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+  },
+}));
+
+// Catch-all to serve index.html for React Router (with no-cache headers)
 app.use((req, res) => {
   if (!req.path.startsWith('/api')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
     res.sendFile(path.join(__dirname, '../dist/index.html'));
   }
 });
@@ -284,12 +314,15 @@ const runSchema = require('./setup');
 async function startServer() {
   try {
     await runSchema();
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    console.log('✅ Database schema verified.');
   } catch (err) {
-    console.error('Failed to start server due to DB setup error:', err);
+    console.error('⚠️ Database setup deferred:', err.message);
+    console.warn('   The server will still start to provide the frontend, but API functionality might be limited.');
   }
+  
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
 }
 
 startServer();

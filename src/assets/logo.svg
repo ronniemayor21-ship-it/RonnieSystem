@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#064e3b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#065f46;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Shield Background -->
+  <path d="M200 40 L340 90 C340 200 280 300 200 340 C120 300 60 200 60 90 L200 40 Z" fill="url(#grad1)" stroke="#fbbf24" stroke-width="8"/>
+  
+  <!-- Animal Silhouettes -->
+  <path d="M140 160 Q130 140 150 130 Q170 120 190 135 L210 135 Q230 120 250 130 Q270 140 260 160 L260 220 Q260 240 240 240 L160 240 Q140 240 140 220 Z" fill="#fbbf24" opacity="0.9"/>
+  
+  <!-- Text -->
+  <text x="200" y="295" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fbbf24" text-anchor="middle" letter-spacing="4">DAIPS</text>
+  
+  <!-- Leaves / Grain -->
+  <path d="M100 110 Q120 80 150 100" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+  <path d="M300 110 Q280 80 250 100" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+</svg>

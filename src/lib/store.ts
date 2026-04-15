@@ -12,6 +12,8 @@ export interface Farmer {
   status?: 'Pending' | 'Approved' | 'Rejected';
 }
 
+import { toast } from 'sonner';
+
 export interface Application {
   id: string;
   farmerId?: string;
@@ -100,6 +102,12 @@ export async function loadData() {
       '⚠️ Could not load data from backend. Is the server running?',
       error
     );
+    // Notify the user via a toast if we are in the browser
+    if (typeof window !== 'undefined') {
+       toast.error('The application is having trouble connecting to the server. Please check your connection or refresh the page.', {
+         id: 'backend-connection-error', // Prevent duplicate toasts
+       });
+    }
   }
 }
 
