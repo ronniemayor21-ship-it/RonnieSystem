@@ -66,6 +66,12 @@ const schema = `
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='age') THEN
       ALTER TABLE applications ADD COLUMN age TEXT;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='photo_url') THEN
+      ALTER TABLE applications ADD COLUMN photo_url TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='ownership_proof_url') THEN
+      ALTER TABLE applications ADD COLUMN ownership_proof_url TEXT;
+    END IF;
   END $$;
 
   CREATE TABLE IF NOT EXISTS claims (

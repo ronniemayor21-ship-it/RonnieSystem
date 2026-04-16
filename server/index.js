@@ -177,7 +177,7 @@ app.post('/api/upload', (req, res) => {
 
     // If req.file.path is a Cloudinary URL, use it; otherwise, use our constructed /uploads path
     const fileUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
-    console.log('✅ File uploaded successfully:', fileUrl);
+    console.log(`✅ [Upload] File uploaded successfully: ${fileUrl} (Field: ${req.file.fieldname})`);
     res.json({ url: fileUrl });
   });
 });
@@ -333,6 +333,10 @@ app.post('/api/applications', async (req, res) => {
 
     const { id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url, purpose, breed, sex, age } = req.body;
     
+    console.log(`📝 [Application] Creating: ${id} for Farmer: ${farmer_id}`);
+    console.log(`   - Photo URL: ${photo_url || 'None'}`);
+    console.log(`   - Proof URL: ${ownership_proof_url || 'None'}`);
+
     // Basic validation
     if (!type) return res.status(400).json({ error: 'Animal type is required' });
 
