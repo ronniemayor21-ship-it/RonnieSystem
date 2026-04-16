@@ -96,6 +96,11 @@ export async function loadData() {
       date: new Date(cl.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }));
 
+    console.log(`📦 [Store] Loaded ${applications.length} applications and ${claims.length} claims.`);
+    if (applications.length > 0) {
+      console.log('   - Sample application photoUrl:', applications[0].photoUrl);
+    }
+
     notify();
   } catch (error) {
     console.warn(
