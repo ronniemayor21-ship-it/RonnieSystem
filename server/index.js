@@ -47,7 +47,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 // Also keep local /uploads for fallback (ephemeral on Render)
-let uploadsDir = path.join(process.cwd(), 'uploads');
+let uploadsDir = path.join(__dirname, 'uploads');
 
 // Ultra-resilient directory creation
 function ensureDir(dirPath) {
@@ -61,17 +61,27 @@ function ensureDir(dirPath) {
     fs.unlinkSync(testFile);
     return true;
   } catch (err) {
+    console.error(`Error ensuring directory ${dirPath}:`, err.message);
     return false;
   }
 }
 
+// Check primary uploads dir
 if (!ensureDir(uploadsDir)) {
-  console.warn(`⚠️  Primary uploads dir ${uploadsDir} is not writable. Trying /tmp fallback...`);
-  uploadsDir = path.join(os.tmpdir(), 'livestox-uploads');
-  if (!ensureDir(uploadsDir)) {
-    console.error('❌  CRITICAL: Could not find any writable directory for uploads.');
+  console.warn(`⚠️  Primary uploads dir ${uploadsDir} is NOT writable. Checking if it's because of directory depth...`);
+  // Try one more time with a relative-to-cwd path as a desperate fallback
+  const fallbackLocal = path.join(process.cwd(), 'uploads');
+  if (ensureDir(fallbackLocal)) {
+    uploadsDir = fallbackLocal;
+    console.log(`✅ Using CWD fallback for uploads: ${uploadsDir}`);
   } else {
-    console.log(`✅  Using /tmp fallback for uploads: ${uploadsDir}`);
+    console.warn(`⚠️  CWD fallback failed. Trying /tmp fallback...`);
+    uploadsDir = path.join(os.tmpdir(), 'livestox-uploads');
+    if (!ensureDir(uploadsDir)) {
+      console.error('❌  CRITICAL: Could not find any writable directory for uploads.');
+    } else {
+      console.log(`✅  Using /tmp fallback for uploads: ${uploadsDir}`);
+    }
   }
 } else {
   console.log(`✅  Uploads directory verified at: ${uploadsDir}`);
@@ -86,14 +96,26 @@ const localMulter = multer({
 });
 
 // Static serving for /uploads
-// We mount multiple static handlers under the same /uploads path
+// We mount multiple static handlers under the same /uploads path to be extremely resilient
 app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Explicitly try server/uploads
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'))); // Explicitly try root/uploads
 app.use('/uploads', express.static(path.join(os.tmpdir(), 'livestox-uploads')));
 
 // Debug log for static requests
 app.use('/uploads', (req, res, next) => {
   console.log(`[Static] Fallback visit for: ${req.url}`);
-  next();
+  // If we reached here, no static file was found
+  res.status(404).json({ 
+    error: 'File not found', 
+    requested: req.url,
+    checkedPaths: [
+      uploadsDir,
+      path.join(__dirname, 'uploads'),
+      path.join(process.cwd(), 'uploads'),
+      path.join(os.tmpdir(), 'livestox-uploads')
+    ]
+  });
 });
 
 // Debug endpoint to check uploaded images

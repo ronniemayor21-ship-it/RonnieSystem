@@ -589,13 +589,22 @@ export default function Admin() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md animate-fade-in">
           <div className="bg-card w-full max-w-4xl rounded-3xl shadow-2xl border border-border overflow-hidden animate-zoom-in relative">
             <div className="p-6 border-b border-border flex justify-between items-center bg-accent/20">
-              <div>
-                <h3 className="font-bold text-lg text-emerald-950">Application Documents</h3>
-                <p className="text-xs text-muted-foreground">ID: {selectedApp.id} | Farmer: {selectedApp.name}</p>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                  <ImageIcon size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-emerald-950">Application Documents</h3>
+                  <p className="text-xs text-muted-foreground font-medium flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-secondary rounded text-foreground font-mono">ID: {selectedApp.id}</span>
+                    <span className="text-border">|</span>
+                    <span>Farmer: <span className="text-foreground font-semibold uppercase">{selectedApp.name}</span></span>
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setSelectedApp(null)}
-                className="p-2 rounded-full bg-secondary hover:bg-accent text-foreground transition-all"
+                className="p-2 rounded-full bg-background border border-border hover:bg-accent text-foreground transition-all shadow-sm"
               >
                 <X size={20} />
               </button>
@@ -603,22 +612,26 @@ export default function Admin() {
             
             <div className="p-8 grid md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
               {/* Photo */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Animal Photo</h4>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-secondary/30 p-2 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Animal Photo</h4>
+                  </div>
                   {selectedApp.photoUrl && (
-                    <a 
-                      href={selectedApp.photoUrl} 
-                      download 
-                      target="_blank" 
-                      className="text-[10px] text-primary hover:underline font-bold"
-                    >
-                      OPEN FULL
-                    </a>
+                    <div className="flex items-center gap-2">
+                       <a 
+                        href={selectedApp.photoUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 font-bold transition-colors"
+                      >
+                        FULL VIEW
+                      </a>
+                    </div>
                   )}
                 </div>
                 {selectedApp.photoUrl ? (
-                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex flex-col items-center justify-center relative group">
+                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex flex-col items-center justify-center relative group shadow-inner">
                     <img 
                       src={selectedApp.photoUrl} 
                       alt="Animal" 
@@ -629,11 +642,17 @@ export default function Admin() {
                         const parent = target.parentElement;
                         if (parent) {
                           const errorDiv = document.createElement('div');
-                          errorDiv.className = 'p-4 text-center space-y-2';
+                          errorDiv.className = 'p-6 text-center space-y-3';
                           errorDiv.innerHTML = `
-                            <p class="text-sm text-destructive font-bold">Image failed to load</p>
-                            <p class="text-[10px] text-muted-foreground break-all">URL: ${selectedApp.photoUrl}</p>
-                            <p class="text-[9px] bg-secondary p-1 rounded">Check if this file exists in /uploads</p>
+                            <div class="inline-flex p-3 bg-destructive/10 text-destructive rounded-full mb-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            </div>
+                            <p class="text-sm font-bold text-slate-800">Photo failed to load</p>
+                            <p class="text-[10px] text-muted-foreground truncate max-w-xs mx-auto">${selectedApp.photoUrl}</p>
+                            <div class="text-[9px] bg-amber-50 text-amber-800 p-2 rounded border border-amber-100 mt-4 leading-relaxed">
+                              This file might be missing on the server.<br/>
+                              If you are on Render, ephemeral storage is cleared on every restart.
+                            </div>
                           `;
                           parent.appendChild(errorDiv);
                         }
@@ -641,29 +660,33 @@ export default function Admin() {
                     />
                   </div>
                 ) : (
-                  <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-stone-50">
+                  <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-secondary/20">
                     No animal photo uploaded
                   </div>
                 )}
               </div>
 
               {/* Ownership Proof */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ownership Proof</h4>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-secondary/30 p-2 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ownership Proof</h4>
+                  </div>
                   {selectedApp.ownershipProofUrl && (
-                    <a 
-                      href={selectedApp.ownershipProofUrl} 
-                      download 
-                      target="_blank" 
-                      className="text-[10px] text-primary hover:underline font-bold"
-                    >
-                      OPEN FULL
-                    </a>
+                    <div className="flex items-center gap-2">
+                       <a 
+                        href={selectedApp.ownershipProofUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 font-bold transition-colors"
+                      >
+                        FULL VIEW
+                      </a>
+                    </div>
                   )}
                 </div>
                 {selectedApp.ownershipProofUrl ? (
-                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex flex-col items-center justify-center relative group">
+                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex flex-col items-center justify-center relative group shadow-inner">
                     <img 
                       src={selectedApp.ownershipProofUrl} 
                       alt="Proof" 
@@ -674,10 +697,17 @@ export default function Admin() {
                         const parent = target.parentElement;
                         if (parent) {
                           const errorDiv = document.createElement('div');
-                          errorDiv.className = 'p-4 text-center space-y-2';
+                          errorDiv.className = 'p-6 text-center space-y-3';
                           errorDiv.innerHTML = `
-                            <p class="text-sm text-destructive font-bold">Document failed to load</p>
-                            <p class="text-[10px] text-muted-foreground break-all">URL: ${selectedApp.ownershipProofUrl}</p>
+                            <div class="inline-flex p-3 bg-destructive/10 text-destructive rounded-full mb-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <p class="text-sm font-bold text-slate-800">Document failed to load</p>
+                            <p class="text-[10px] text-muted-foreground truncate max-w-xs mx-auto">${selectedApp.ownershipProofUrl}</p>
+                            <div class="text-[9px] bg-amber-50 text-amber-800 p-2 rounded border border-amber-100 mt-4 leading-relaxed">
+                              This file might be missing on the server.<br/>
+                              Check the <strong>/uploads</strong> folder in your server directory.
+                            </div>
                           `;
                           parent.appendChild(errorDiv);
                         }
@@ -685,7 +715,7 @@ export default function Admin() {
                     />
                   </div>
                 ) : (
-                  <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-stone-50">
+                  <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-secondary/20">
                     No proof document uploaded
                   </div>
                 )}
