@@ -126,6 +126,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Database Status Endpoint (Detailed Diagnostics)
+app.get('/api/status', (req, res) => {
+  const isConnected = db.getIsConnected();
+  const hasUrl = !!process.env.DATABASE_URL;
+  
+  res.json({
+    database: isConnected ? 'Connected' : 'Disconnected',
+    usingRemote: hasUrl,
+    storage: hasCloudinary ? 'Cloudinary (Cloud)' : 'Local Disk (Fallback)',
+    env: process.env.NODE_ENV || 'development',
+    instruction: isConnected 
+      ? '✅ Your database is working perfectly!' 
+      : (hasUrl 
+          ? '❌ Connecting to Render, but failed. Check your IP whitelist or URL credentials.' 
+          : '⚠️ No Render URL found. Still using local database.')
+  });
+});
+
 // File Upload Endpoint — uploads to Cloudinary (persistent) or local (fallback)
 app.post('/api/upload', (req, res) => {
   // Try Cloudinary first
