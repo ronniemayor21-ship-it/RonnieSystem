@@ -133,9 +133,13 @@ export async function uploadFile(file: File): Promise<string> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    let errorText = 'File upload failed';
+    try {
+      errorText = await response.text();
+    } catch (e) { /* fallback to default message */ }
+    
     console.error('Upload failed with status:', response.status, errorText);
-    throw new Error('File upload failed: ' + errorText);
+    throw new Error(`File upload failed (${response.status}): ${errorText}`);
   }
 
   const result = await response.json();
@@ -166,22 +170,37 @@ export async function addApplication(app: Omit<Application, 'id' | 'date' | 'sta
     status: 'Pending'
   };
 
-  await fetch(`${API_URL}/applications`, {
+  const response = await fetch(`${API_URL}/applications`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
+
+  if (!response.ok) {
+    let errorMsg = 'Failed to submit application';
+    try {
+      const data = await response.json();
+      errorMsg = data.error || data.message || errorMsg;
+    } catch (e) {
+      errorMsg = await response.text() || errorMsg;
+    }
+    throw new Error(errorMsg);
+  }
 
   await loadData();
   return refID;
 }
 
 export async function updateApplicationStatus(id: string, status: Application['status']) {
-  await fetch(`${API_URL}/applications/${id}`, {
+  const response = await fetch(`${API_URL}/applications/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
   });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update status: ${response.statusText}`);
+  }
   await loadData();
 }
 
@@ -263,27 +282,39 @@ export async function addFarmer(farmer: Omit<Farmer, 'id'>) {
 }
 
 export async function updateFarmer(id: string, updates: Partial<Omit<Farmer, 'id'>>) {
-  await fetch(`${API_URL}/farmers/${id}`, {
+  const response = await fetch(`${API_URL}/farmers/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update farmer: ${response.statusText}`);
+  }
   await loadData();
 }
 
 export async function updateFarmerStatus(id: string, status: Farmer['status']) {
-  await fetch(`${API_URL}/farmers/${id}`, {
+  const response = await fetch(`${API_URL}/farmers/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update status: ${response.statusText}`);
+  }
   await loadData();
 }
 
 export async function deleteFarmer(id: string) {
-  await fetch(`${API_URL}/farmers/${id}`, {
+  const response = await fetch(`${API_URL}/farmers/${id}`, {
     method: 'DELETE'
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete farmer: ${response.statusText}`);
+  }
   await loadData();
 }
 
@@ -305,21 +336,34 @@ export async function addClaim(claim: Omit<Claim, 'id' | 'date' | 'status'>) {
     status: 'Pending'
   };
 
-  await fetch(`${API_URL}/claims`, {
+  const response = await fetch(`${API_URL}/claims`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
+
+  if (!response.ok) {
+    let errorMsg = 'Failed to submit claim';
+    try {
+      const data = await response.json();
+      errorMsg = data.error || errorMsg;
+    } catch (e) { /* fallback */ }
+    throw new Error(errorMsg);
+  }
 
   await loadData();
   return id;
 }
 
 export async function updateClaimStatus(id: string, status: Claim['status']) {
-  await fetch(`${API_URL}/claims/${id}`, {
+  const response = await fetch(`${API_URL}/claims/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update claim status: ${response.statusText}`);
+  }
   await loadData();
 }

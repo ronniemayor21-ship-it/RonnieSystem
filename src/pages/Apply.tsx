@@ -74,9 +74,10 @@ export default function Apply() {
         toast.success(`Application submitted! Ref: ${refID}`);
         setLoading(false);
         navigate('/dashboard');
-      } catch (error) {
-        console.error(error);
-        toast.error('Failed to submit application. Please try again.');
+      } catch (error: any) {
+        console.error('Submission Error:', error);
+        const errorMessage = error.message || 'Failed to submit application. Please try again.';
+        toast.error(errorMessage);
         setLoading(false);
       }
     };

@@ -91,11 +91,19 @@ const schema = `
 
 async function runSchema() {
   try {
-    console.log('Running schema setup...');
+    console.log('--- Starting Database Schema Verification ---');
+    
+    // Split schema into individual commands for better error isolation if needed,
+    // but for now we'll run it as one and catch the exact error.
     await db.query(schema);
-    console.log('✅ Tables created/verified successfully!');
+    
+    console.log('✅ Tables and migrations verified successfully!');
+    console.log('--- Database schema set up complete ---');
   } catch (err) {
-    console.error('❌ Error executing schema:', err);
+    console.error('❌ Error executing database schema setup:');
+    console.error('   Message:', err.message);
+    if (err.detail) console.error('   Detail:', err.detail);
+    if (err.hint) console.error('   Hint:', err.hint);
     throw err;
   }
 }

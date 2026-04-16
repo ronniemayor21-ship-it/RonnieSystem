@@ -56,16 +56,44 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// File Upload Endpoint — uploads to Cloudinary, returns a persistent URL
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    console.error('Upload attempt failed: No file provided');
-    return res.status(400).send('No file uploaded.');
-  }
-  // Cloudinary gives us req.file.path which is the full https:// URL
-  const fileUrl = req.file.path;
-  console.log('✅ File uploaded successfully:', fileUrl);
-  res.json({ url: fileUrl });
+// File Upload Endpoint — uploads to Cloudinary (persistent) or local (fallback)
+app.post('/api/upload', (req, res) => {
+  // Try Cloudinary first, if storage was successfully initialized
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('Multer/Cloudinary Error:', err);
+      // Fallback to local disk if Cloudinary failed or is missing
+      const localMulter = multer({
+        storage: multer.diskStorage({
+          destination: (req, file, cb) => cb(null, uploadsDir),
+          filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+        })
+      });
+
+      localMulter.single('file')(req, res, (localErr) => {
+        if (localErr || !req.file) {
+          console.error('Local Upload Fallback Failed:', localErr);
+          return res.status(500).send('Upload failed (both Cloudinary and local fallback).');
+        }
+        const fileUrl = `/uploads/${req.file.filename}`;
+        console.warn('⚠️ Cloudinary failed, used local fallback:', fileUrl);
+        res.json({ url: fileUrl });
+      });
+      return;
+    }
+
+    if (!req.file) {
+      console.error('Upload attempt failed: No file provided');
+      return res.status(400).send('No file uploaded.');
+    }
+
+    // Cloudinary gives us req.file.path (the full URL)
+    // Local fallback gives us req.file.path (the local file path)
+    // If it's a URL, use it; otherwise, use our constructed /uploads path
+    const fileUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
+    console.log('✅ File uploaded successfully:', fileUrl);
+    res.json({ url: fileUrl });
+  });
 });
 
 // ==========================================
@@ -213,16 +241,35 @@ app.get('/api/applications', async (req, res) => {
 // Create an application
 app.post('/api/applications', async (req, res) => {
   try {
+    if (!db.getIsConnected()) {
+      return res.status(503).json({ error: 'Database is currently disconnected. Please try again in a few moments.' });
+    }
+
     const { id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url, purpose, breed, sex, age } = req.body;
+    
+    // Basic validation
+    if (!type) return res.status(400).json({ error: 'Animal type is required' });
+
+    // Sanitize values: convert empty strings to null for better DB compatibility
+    const sanitizedValue = (value === '' || isNaN(Number(value))) ? null : Number(value);
+    const sanitizedStartDate = start_date || null;
+    const sanitizedEndDate = end_date || null;
+
     const newApp = await db.query(
       `INSERT INTO applications (id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status, photo_url, ownership_proof_url, purpose, breed, sex, age) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
-      [id, farmer_id, name, type, mobile, address, district, value, start_date, end_date, status || 'Pending', photo_url, ownership_proof_url, purpose, breed, sex, age]
+      [id, farmer_id, name, type, mobile, address, district, sanitizedValue, sanitizedStartDate, sanitizedEndDate, status || 'Pending', photo_url, ownership_proof_url, purpose, breed, sex, age]
     );
     res.json(newApp.rows[0]);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('❌ Application Submission Error:', err.message);
+    
+    // Check for specific DB errors
+    if (err.message.includes('column') && err.message.includes('does not exist')) {
+      return res.status(500).json({ error: 'Database schema mismatch. Please contact administrator to run migrations.' });
+    }
+    
+    res.status(500).json({ error: `Server Error: ${err.message}` });
   }
 });
 
