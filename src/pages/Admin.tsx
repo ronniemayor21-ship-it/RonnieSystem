@@ -610,8 +610,12 @@ export default function Admin() {
                     <img 
                       src={selectedApp.photoUrl} 
                       alt="Animal" 
-                      className="w-full h-full object-contain"
-                      onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400?text=Error+Loading+Image')}
+                      title={`Image source: ${selectedApp.photoUrl}`}
+                      className="w-full h-full object-contain cursor-help"
+                      onError={(e) => {
+                        console.error('Failed to load image:', selectedApp.photoUrl);
+                        e.currentTarget.src = `https://placehold.co/600x400?text=Error+Loading+Image%0A${encodeURIComponent(selectedApp.photoUrl || '')}`;
+                      }}
                     />
                   </div>
                 ) : (
@@ -629,8 +633,12 @@ export default function Admin() {
                     <img 
                       src={selectedApp.ownershipProofUrl} 
                       alt="Proof" 
-                      className="w-full h-full object-contain"
-                      onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400?text=Error+Loading+Image')}
+                      title={`Image source: ${selectedApp.ownershipProofUrl}`}
+                      className="w-full h-full object-contain cursor-help"
+                      onError={(e) => {
+                        console.error('Failed to load proof image:', selectedApp.ownershipProofUrl);
+                        e.currentTarget.src = `https://placehold.co/600x400?text=Error+Loading+Image%0A${encodeURIComponent(selectedApp.ownershipProofUrl || '')}`;
+                      }}
                     />
                   </div>
                 ) : (
@@ -679,8 +687,12 @@ export default function Admin() {
                     <img 
                       src={selectedClaim.photoUrl} 
                       alt="Claim Evidence" 
-                      className="w-full h-full object-contain"
-                      onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400?text=Error+Loading+Image')}
+                      title={`Image source: ${selectedClaim.photoUrl}`}
+                      className="w-full h-full object-contain cursor-help"
+                      onError={(e) => {
+                        console.error('Failed to load claim image:', selectedClaim.photoUrl);
+                        e.currentTarget.src = `https://placehold.co/600x400?text=Error+Loading+Image%0A${encodeURIComponent(selectedClaim.photoUrl || '')}`;
+                      }}
                     />
                   </div>
                 ) : (

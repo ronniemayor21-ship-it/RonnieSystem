@@ -14,7 +14,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Configure Cloudinary
+// Ensure Cloudinary credentials exist
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.warn('⚠️ Cloudinary environment variables are missing. File uploads will fail.');
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -38,7 +42,10 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', (req, res, next) => {
+  console.log(`[Static] Request for ${req.url}`);
+  next();
+}, express.static(uploadsDir));
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -52,10 +59,12 @@ app.get('/api/health', (req, res) => {
 // File Upload Endpoint — uploads to Cloudinary, returns a persistent URL
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
+    console.error('Upload attempt failed: No file provided');
     return res.status(400).send('No file uploaded.');
   }
   // Cloudinary gives us req.file.path which is the full https:// URL
   const fileUrl = req.file.path;
+  console.log('✅ File uploaded successfully:', fileUrl);
   res.json({ url: fileUrl });
 });
 

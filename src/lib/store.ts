@@ -79,8 +79,8 @@ export async function loadData() {
       farmerId: app.farmer_id,
       startDate: app.start_date ? app.start_date.split('T')[0] : undefined,
       endDate: app.end_date ? app.end_date.split('T')[0] : undefined,
-      photoUrl: app.photo_url ? `${UPLOADS_URL}${app.photo_url}` : undefined,
-      ownershipProofUrl: app.ownership_proof_url ? `${UPLOADS_URL}${app.ownership_proof_url}` : undefined,
+      photoUrl: app.photo_url ? (app.photo_url.startsWith('http') ? app.photo_url : `${UPLOADS_URL}${app.photo_url}`) : undefined,
+      ownershipProofUrl: app.ownership_proof_url ? (app.ownership_proof_url.startsWith('http') ? app.ownership_proof_url : `${UPLOADS_URL}${app.ownership_proof_url}`) : undefined,
       date: new Date(app.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }));
 
@@ -92,7 +92,7 @@ export async function loadData() {
       farmerId: cl.farmer_id,
       farmerName: cl.farmer_name,
       animalType: cl.animal_type,
-      photoUrl: cl.photo_url ? `${UPLOADS_URL}${cl.photo_url}` : undefined,
+      photoUrl: cl.photo_url ? (cl.photo_url.startsWith('http') ? cl.photo_url : `${UPLOADS_URL}${cl.photo_url}`) : undefined,
       date: new Date(cl.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }));
 
@@ -133,10 +133,13 @@ export async function uploadFile(file: File): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error('File upload failed');
+    const errorText = await response.text();
+    console.error('Upload failed with status:', response.status, errorText);
+    throw new Error('File upload failed: ' + errorText);
   }
 
   const result = await response.json();
+  console.log('Upload successful. URL:', result.url);
   return result.url;
 }
 
