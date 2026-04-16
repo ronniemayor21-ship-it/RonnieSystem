@@ -37,11 +37,25 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-// Also keep local /uploads for any existing files (backwards compat)
-const uploadsDir = path.join(__dirname, 'uploads');
+// Also keep local /uploads for fallback (ephemeral on Render)
+const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log(`✅ Uploads directory created at: ${uploadsDir}`);
+  } catch (err) {
+    console.error(`❌ Failed to create uploads directory: ${err.message}`);
+  }
 }
+
+// Initialize local storage multer as a fallback
+const localMulter = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadsDir),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+  })
+});
+
 app.use('/uploads', (req, res, next) => {
   console.log(`[Static] Request for ${req.url}`);
   next();
@@ -58,25 +72,23 @@ app.get('/api/health', (req, res) => {
 
 // File Upload Endpoint — uploads to Cloudinary (persistent) or local (fallback)
 app.post('/api/upload', (req, res) => {
-  // Try Cloudinary first, if storage was successfully initialized
+  // Try Cloudinary first
   upload.single('file')(req, res, (err) => {
     if (err) {
-      console.error('Multer/Cloudinary Error:', err);
-      // Fallback to local disk if Cloudinary failed or is missing
-      const localMulter = multer({
-        storage: multer.diskStorage({
-          destination: (req, file, cb) => cb(null, uploadsDir),
-          filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
-        })
-      });
-
+      console.warn('⚠️ Cloudinary Upload Error, trying local fallback:', err.message);
+      
+      // Fallback to local disk
       localMulter.single('file')(req, res, (localErr) => {
         if (localErr || !req.file) {
-          console.error('Local Upload Fallback Failed:', localErr);
-          return res.status(500).send('Upload failed (both Cloudinary and local fallback).');
+          console.error('❌ Local Upload Fallback Failed:', localErr ? localErr.message : 'No file');
+          return res.status(500).json({ 
+            error: 'Upload failed completely.',
+            details: localErr ? localErr.message : 'No file received',
+            path: uploadsDir 
+          });
         }
         const fileUrl = `/uploads/${req.file.filename}`;
-        console.warn('⚠️ Cloudinary failed, used local fallback:', fileUrl);
+        console.warn('✅ Cloudinary failed, used local fallback:', fileUrl);
         res.json({ url: fileUrl });
       });
       return;
@@ -87,9 +99,7 @@ app.post('/api/upload', (req, res) => {
       return res.status(400).send('No file uploaded.');
     }
 
-    // Cloudinary gives us req.file.path (the full URL)
-    // Local fallback gives us req.file.path (the local file path)
-    // If it's a URL, use it; otherwise, use our constructed /uploads path
+    // If req.file.path is a Cloudinary URL, use it; otherwise, use our constructed /uploads path
     const fileUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     console.log('✅ File uploaded successfully:', fileUrl);
     res.json({ url: fileUrl });

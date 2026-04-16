@@ -135,8 +135,14 @@ export async function uploadFile(file: File): Promise<string> {
   if (!response.ok) {
     let errorText = 'File upload failed';
     try {
-      errorText = await response.text();
-    } catch (e) { /* fallback to default message */ }
+      const errorData = await response.json();
+      errorText = errorData.error || errorData.details || errorText;
+      if (errorData.path) errorText += ` (Path: ${errorData.path})`;
+    } catch (e) {
+      try {
+        errorText = await response.text();
+      } catch (inner) { /* fallback */ }
+    }
     
     console.error('Upload failed with status:', response.status, errorText);
     throw new Error(`File upload failed (${response.status}): ${errorText}`);
