@@ -17,10 +17,15 @@ app.use(express.json());
 
 // Ensure Cloudinary credentials exist
 const hasCloudinary = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
-if (!hasCloudinary) {
-  console.warn('\n⚠️  CLOUDINARY NOT CONFIGURED');
-  console.warn('   File uploads will use a temporary local fallback (cleared on restart).');
-  console.warn('   To fix this, set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env or Render dashboard.\n');
+const silenceWarning = process.env.SILENCE_CLOUDINARY_WARNING === 'true';
+
+if (!hasCloudinary && !silenceWarning) {
+  console.log('\n--- STORAGE STATUS ---');
+  console.log('ℹ️  Cloudinary credentials missing: Photo uploads will use local storage.');
+  console.log('   To use Cloudinary, set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and API_SECRET.');
+  console.log('----------------------\n');
+} else if (hasCloudinary) {
+  console.log('✅ Cloudinary storage initialized');
 }
 
 cloudinary.config({
@@ -126,7 +131,9 @@ app.post('/api/upload', (req, res) => {
   // Try Cloudinary first
   upload.single('file')(req, res, (err) => {
     if (err) {
-      console.warn('⚠️ Cloudinary Upload Error, trying local fallback:', err.message);
+      if (!silenceWarning) {
+        console.log(`ℹ️  Cloudinary skip: ${err.message}. Using local storage fallback.`);
+      }
       
       // Fallback to local disk
       localMulter.single('file')(req, res, (localErr) => {
