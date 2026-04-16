@@ -649,9 +649,14 @@ export default function Admin() {
                             </div>
                             <p class="text-sm font-bold text-slate-800">Photo failed to load</p>
                             <p class="text-[10px] text-muted-foreground truncate max-w-xs mx-auto">${selectedApp.photoUrl}</p>
-                            <div class="text-[9px] bg-amber-50 text-amber-800 p-2 rounded border border-amber-100 mt-4 leading-relaxed">
-                              This file might be missing on the server.<br/>
-                              If you are on Render, ephemeral storage is cleared on every restart.
+                            <div class="text-[9px] bg-amber-50 text-amber-800 p-3 rounded border border-amber-100 mt-4 leading-relaxed text-left">
+                              <strong>Why is this happening?</strong><br/>
+                              ${selectedApp.photoUrl?.startsWith('/uploads') 
+                                ? 'This file was stored locally on the server. On Render, local files are deleted on every restart. You must use Cloudinary for permanent storage.' 
+                                : 'The image link is broken or Cloudinary could not serve it.'}
+                              <div class="mt-2 pt-2 border-t border-amber-200">
+                                <a href="${window.location.origin}/api/debug/cloudinary" target="_blank" class="text-primary font-bold hover:underline">Check Cloudinary Status ↗</a>
+                              </div>
                             </div>
                           `;
                           parent.appendChild(errorDiv);
@@ -704,9 +709,14 @@ export default function Admin() {
                             </div>
                             <p class="text-sm font-bold text-slate-800">Document failed to load</p>
                             <p class="text-[10px] text-muted-foreground truncate max-w-xs mx-auto">${selectedApp.ownershipProofUrl}</p>
-                            <div class="text-[9px] bg-amber-50 text-amber-800 p-2 rounded border border-amber-100 mt-4 leading-relaxed">
-                              This file might be missing on the server.<br/>
-                              Check the <strong>/uploads</strong> folder in your server directory.
+                            <div class="text-[9px] bg-amber-50 text-amber-800 p-3 rounded border border-amber-100 mt-4 leading-relaxed text-left">
+                              <strong>Why is this happening?</strong><br/>
+                              ${selectedApp.ownershipProofUrl?.startsWith('/uploads') 
+                                ? 'This document was stored locally on the server. On Render, local files are deleted on every restart.' 
+                                : 'The document link is broken or Cloudinary could not serve it.'}
+                              <div class="mt-2 pt-2 border-t border-amber-200">
+                                <a href="${window.location.origin}/api/debug/cloudinary" target="_blank" class="text-primary font-bold hover:underline">Check Cloudinary Status ↗</a>
+                              </div>
                             </div>
                           `;
                           parent.appendChild(errorDiv);

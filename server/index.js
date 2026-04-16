@@ -114,8 +114,35 @@ app.use('/uploads', (req, res, next) => {
       path.join(__dirname, 'uploads'),
       path.join(process.cwd(), 'uploads'),
       path.join(os.tmpdir(), 'livestox-uploads')
-    ]
+    ],
+    hint: process.env.RENDER ? 'You are on Render. Local uploads are ephemeral. Check Cloudinary settings.' : 'Check if the file exists on the server.'
   });
+});
+
+// Detailed Cloudinary Diagnostic Endpoint
+app.get('/api/debug/cloudinary', async (req, res) => {
+  const config = {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY ? 'Set (Masked)' : 'Not Set',
+    api_secret: process.env.CLOUDINARY_API_SECRET ? 'Set (Masked)' : 'Not Set',
+  };
+
+  try {
+    const ping = await cloudinary.api.ping();
+    res.json({
+      status: 'Connected',
+      config,
+      ping,
+      message: '✅ Cloudinary is configured and reachable.'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'Error',
+      config,
+      error: err.message,
+      instruction: 'Verify your Cloudinary environment variables in Render/Dashboard.'
+    });
+  }
 });
 
 // Debug endpoint to check uploaded images
@@ -171,11 +198,23 @@ app.post('/api/upload', (req, res) => {
   // Try Cloudinary first
   upload.single('file')(req, res, (err) => {
     if (err) {
+      console.error('❌ Cloudinary Upload Error:', err.message);
+      
+      // If we are on Render, DO NOT fall back to local storage
+      // because it will be lost on restart.
+      if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+        return res.status(500).json({ 
+          error: 'Cloudinary upload failed. Local fallback disabled on Render to prevent data loss.',
+          details: err.message,
+          instruction: 'Please check your Cloudinary configuration in environment variables.'
+        });
+      }
+
       if (!silenceWarning) {
         console.log(`ℹ️  Cloudinary skip: ${err.message}. Using local storage fallback.`);
       }
       
-      // Fallback to local disk
+      // Fallback to local disk (only for dev/local environments)
       localMulter.single('file')(req, res, (localErr) => {
         if (localErr || !req.file) {
           console.error('❌ Local Upload Fallback Failed:', localErr ? localErr.message : 'No file');
