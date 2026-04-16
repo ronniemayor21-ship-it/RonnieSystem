@@ -45,13 +45,23 @@ export default function Apply() {
         let ownershipProofUrl = undefined;
 
         if (animalPhoto) {
-          toast.info('Uploading animal photo...');
-          photoUrl = await uploadFile(animalPhoto);
+          try {
+            toast.info('Uploading animal photo...');
+            photoUrl = await uploadFile(animalPhoto);
+          } catch (uploadErr) {
+            console.error('Animal photo upload failed:', uploadErr);
+            toast.warning('Animal photo upload failed. Continuing submission without photo.');
+          }
         }
 
         if (ownershipProof) {
-          toast.info('Uploading ownership proof...');
-          ownershipProofUrl = await uploadFile(ownershipProof);
+          try {
+            toast.info('Uploading ownership proof...');
+            ownershipProofUrl = await uploadFile(ownershipProof);
+          } catch (uploadErr) {
+            console.error('Ownership proof upload failed:', uploadErr);
+            toast.warning('Ownership proof upload failed. Continuing submission without proof document.');
+          }
         }
 
         const refID = await addApplication({
