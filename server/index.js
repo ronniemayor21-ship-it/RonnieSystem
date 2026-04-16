@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const db = require('./db');
 const fs = require('fs');
+const os = require('os');
 require('dotenv').config();
 
 const app = express();
@@ -15,8 +16,11 @@ app.use(cors());
 app.use(express.json());
 
 // Ensure Cloudinary credentials exist
-if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-  console.warn('⚠️ Cloudinary environment variables are missing. File uploads will fail.');
+const hasCloudinary = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
+if (!hasCloudinary) {
+  console.warn('\n⚠️  CLOUDINARY NOT CONFIGURED');
+  console.warn('   File uploads will use a temporary local fallback (cleared on restart).');
+  console.warn('   To fix this, set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env or Render dashboard.\n');
 }
 
 cloudinary.config({
@@ -38,14 +42,34 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 // Also keep local /uploads for fallback (ephemeral on Render)
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
+let uploadsDir = path.join(process.cwd(), 'uploads');
+
+// Ultra-resilient directory creation
+function ensureDir(dirPath) {
   try {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log(`✅ Uploads directory created at: ${uploadsDir}`);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    // Test writability
+    const testFile = path.join(dirPath, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    return true;
   } catch (err) {
-    console.error(`❌ Failed to create uploads directory: ${err.message}`);
+    return false;
   }
+}
+
+if (!ensureDir(uploadsDir)) {
+  console.warn(`⚠️  Primary uploads dir ${uploadsDir} is not writable. Trying /tmp fallback...`);
+  uploadsDir = path.join(os.tmpdir(), 'livestox-uploads');
+  if (!ensureDir(uploadsDir)) {
+    console.error('❌  CRITICAL: Could not find any writable directory for uploads.');
+  } else {
+    console.log(`✅  Using /tmp fallback for uploads: ${uploadsDir}`);
+  }
+} else {
+  console.log(`✅  Uploads directory verified at: ${uploadsDir}`);
 }
 
 // Initialize local storage multer as a fallback
@@ -57,9 +81,9 @@ const localMulter = multer({
 });
 
 app.use('/uploads', (req, res, next) => {
-  console.log(`[Static] Request for ${req.url}`);
+  // Try finding in primary or tmp via express.static
   next();
-}, express.static(uploadsDir));
+}, express.static(uploadsDir), express.static(path.join(os.tmpdir(), 'livestox-uploads')));
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
