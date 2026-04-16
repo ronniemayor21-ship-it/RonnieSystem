@@ -21,9 +21,14 @@ let isConnected = false;
 // Test connection with descriptive logging
 pool.connect((err, client, release) => {
   if (err) {
-    console.error('❌ Database connection error:', err.message);
+    console.error('\n❌ DATABASE CONNECTION ERROR:', err.message);
     if (process.env.DATABASE_URL) {
-      console.error('   Note: Using DATABASE_URL from environment.');
+      console.error('   Using DATABASE_URL from environment.');
+      if (err.message.includes('no pg_hba.conf entry')) {
+        console.error('   👉 ACTION REQUIRED: On Render, you must "Allow your current IP" in your database settings for local connections to work.\n');
+      }
+    } else {
+      console.error('   👉 ACTION REQUIRED: No DATABASE_URL found. Please add your Render URL to your .env file.\n');
     }
     return;
   }
