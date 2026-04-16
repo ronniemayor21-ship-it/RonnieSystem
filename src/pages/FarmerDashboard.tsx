@@ -30,6 +30,8 @@ export default function FarmerDashboard() {
     const farmers = useFarmers();
     const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'claims'>('overview');
     const [loadTimeout, setLoadTimeout] = useState(false);
+    const [selectedApp, setSelectedApp] = useState<any>(null);
+    const [selectedClaim, setSelectedClaim] = useState<any>(null);
 
     const storedUser = localStorage.getItem('currentUser');
     const parsedUser = storedUser ? JSON.parse(storedUser) : null;
@@ -285,7 +287,7 @@ export default function FarmerDashboard() {
                                 <table className="w-full text-left border-collapse">
                                     <thead className="bg-secondary/50">
                                         <tr>
-                                            {['Ref ID', 'Type', 'Date', 'Status'].map(h => (
+                                            {['Ref ID', 'Type', 'Docs', 'Date', 'Status'].map(h => (
                                                 <th key={h} className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                                     {h}
                                                 </th>
@@ -297,6 +299,18 @@ export default function FarmerDashboard() {
                                             <tr key={app.id} className="hover:bg-secondary/30 transition-colors">
                                                 <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{app.id}</td>
                                                 <td className="px-6 py-4 text-sm font-bold text-emerald-950">{app.type}</td>
+                                                <td className="px-6 py-4">
+                                                    {(app.photoUrl || app.ownershipProofUrl) ? (
+                                                        <button 
+                                                            onClick={() => setSelectedApp(app)}
+                                                            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors flex items-center gap-1 text-[10px] font-bold"
+                                                        >
+                                                            <ImageIcon size={14} /> VIEW
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground italic">No Photos</span>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4 text-xs text-muted-foreground">{app.date}</td>
                                                 <td className="px-6 py-4"><StatusBadge status={app.status} /></td>
                                             </tr>
@@ -323,7 +337,7 @@ export default function FarmerDashboard() {
                                 <table className="w-full text-left border-collapse">
                                     <thead className="bg-secondary/50">
                                         <tr>
-                                            {['Claim ID', 'App ID', 'Date', 'Status'].map(h => (
+                                            {['Claim ID', 'App ID', 'Docs', 'Date', 'Status'].map(h => (
                                                 <th key={h} className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                                     {h}
                                                 </th>
@@ -335,6 +349,18 @@ export default function FarmerDashboard() {
                                             <tr key={claim.id} className="hover:bg-secondary/30 transition-colors">
                                                 <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{claim.id}</td>
                                                 <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{claim.applicationId}</td>
+                                                <td className="px-6 py-4">
+                                                    {claim.photoUrl ? (
+                                                        <button 
+                                                            onClick={() => setSelectedClaim(claim)}
+                                                            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors flex items-center gap-1 text-[10px] font-bold"
+                                                        >
+                                                            <ImageIcon size={14} /> VIEW
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground italic">No Photos</span>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4 text-xs text-muted-foreground">{claim.date}</td>
                                                 <td className="px-6 py-4"><StatusBadge status={claim.status} /></td>
                                             </tr>
@@ -362,6 +388,155 @@ export default function FarmerDashboard() {
                     )}
                 </div>
             </div>
+
+            {/* Photo Viewer Modal */}
+            {selectedApp && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md animate-fade-in">
+                    <div className="bg-card w-full max-w-4xl rounded-3xl shadow-2xl border border-border overflow-hidden animate-zoom-in relative">
+                        <div className="p-6 border-b border-border flex justify-between items-center bg-emerald-50/20">
+                            <div>
+                                <h3 className="font-bold text-lg text-emerald-950">Application Documents</h3>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Ref ID: {selectedApp.id}</p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedApp(null)}
+                                className="p-2 rounded-full bg-secondary hover:bg-emerald-100 text-foreground transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-8 grid md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
+                            {/* Photo */}
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Animal Photo</h4>
+                                    {selectedApp.photoUrl && (
+                                        <a href={selectedApp.photoUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-emerald-600 font-bold hover:underline">
+                                            VIEW FULL
+                                        </a>
+                                    )}
+                                </div>
+                                {selectedApp.photoUrl ? (
+                                    <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex items-center justify-center">
+                                        <img 
+                                            src={selectedApp.photoUrl} 
+                                            alt="Animal" 
+                                            className="w-full h-full object-contain"
+                                            onError={(e) => {
+                                                const target = e.currentTarget;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                    const errorDiv = document.createElement('div');
+                                                    errorDiv.className = 'p-4 text-center space-y-1';
+                                                    errorDiv.innerHTML = `
+                                                        <p class="text-xs text-destructive font-bold">Image failed to load</p>
+                                                        <p class="text-[9px] text-muted-foreground break-all">${selectedApp.photoUrl}</p>
+                                                    `;
+                                                    parent.appendChild(errorDiv);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-stone-50">
+                                        No animal photo uploaded
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Ownership Proof */}
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ownership Proof</h4>
+                                    {selectedApp.ownershipProofUrl && (
+                                        <a href={selectedApp.ownershipProofUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-emerald-600 font-bold hover:underline">
+                                            VIEW FULL
+                                        </a>
+                                    )}
+                                </div>
+                                {selectedApp.ownershipProofUrl ? (
+                                    <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex items-center justify-center">
+                                        <img 
+                                            src={selectedApp.ownershipProofUrl} 
+                                            alt="Proof" 
+                                            className="w-full h-full object-contain"
+                                            onError={(e) => {
+                                                const target = e.currentTarget;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                    const errorDiv = document.createElement('div');
+                                                    errorDiv.className = 'p-4 text-center space-y-1';
+                                                    errorDiv.innerHTML = `
+                                                        <p class="text-xs text-destructive font-bold">Document failed to load</p>
+                                                        <p class="text-[9px] text-muted-foreground break-all">${selectedApp.ownershipProofUrl}</p>
+                                                    `;
+                                                    parent.appendChild(errorDiv);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border-2 border-dashed border-border aspect-video flex items-center justify-center text-muted-foreground italic text-sm bg-stone-50">
+                                        No proof document uploaded
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-6 bg-emerald-50/30 border-t border-border flex justify-end">
+                            <button
+                                onClick={() => setSelectedApp(null)}
+                                className="px-6 py-2.5 bg-emerald-900 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-900/10 hover:bg-emerald-950 transition-all active:scale-[0.98]"
+                            >
+                                Close Viewer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Claim Evidence Modal (Optional — reusing basic logic) */}
+            {selectedClaim && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md animate-fade-in">
+                    <div className="bg-card w-full max-w-2xl rounded-3xl shadow-2xl border border-border overflow-hidden animate-zoom-in relative">
+                        <div className="p-6 border-b border-border flex justify-between items-center bg-emerald-50/20">
+                            <div>
+                                <h3 className="font-bold text-lg text-emerald-950">Claim Evidence</h3>
+                                <p className="text-xs text-muted-foreground">ID: {selectedClaim.id}</p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedClaim(null)}
+                                className="p-2 rounded-full bg-secondary hover:bg-emerald-100 text-foreground transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-8 flex items-center justify-center">
+                           <div className="w-full space-y-3">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Evidence Photo</h4>
+                                <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex items-center justify-center">
+                                    <img 
+                                        src={selectedClaim.photoUrl} 
+                                        alt="Claim Evidence" 
+                                        className="w-full h-full object-contain"
+                                    />
+                                </div>
+                           </div>
+                        </div>
+                        <div className="p-6 bg-emerald-50/30 border-t border-border flex justify-end">
+                            <button
+                                onClick={() => setSelectedClaim(null)}
+                                className="px-6 py-2.5 bg-emerald-900 text-white rounded-xl font-bold text-sm hover:bg-emerald-950 transition-all active:scale-[0.98]"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
