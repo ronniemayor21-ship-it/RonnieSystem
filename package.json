@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:all": "npm run dev",
     "db:setup": "cd server && node setup.js",
-    "build": "echo 'Busting Render Cache' && node --max-old-space-size=4096 node_modules/vite/bin/vite.js build && cd server && npm install",
+    "build": "echo 'Busting Render Cache' && node --max-old-space-size=4096 node_modules/vite/bin/vite.js build && cd server && npm install --legacy-peer-deps",
     "start": "node server/index.js",
     "build:dev": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build --mode development",
     "lint": "eslint .",
