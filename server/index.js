@@ -80,10 +80,37 @@ const localMulter = multer({
   })
 });
 
+// Static serving for /uploads
+// We mount multiple static handlers under the same /uploads path
+app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static(path.join(os.tmpdir(), 'livestox-uploads')));
+
+// Debug log for static requests
 app.use('/uploads', (req, res, next) => {
-  // Try finding in primary or tmp via express.static
+  console.log(`[Static] Fallback visit for: ${req.url}`);
   next();
-}, express.static(uploadsDir), express.static(path.join(os.tmpdir(), 'livestox-uploads')));
+});
+
+// Debug endpoint to check uploaded images
+app.get('/api/debug/images', (req, res) => {
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    const tmpDir = path.join(os.tmpdir(), 'livestox-uploads');
+    const tmpFiles = fs.existsSync(tmpDir) ? fs.readdirSync(tmpDir) : [];
+    
+    res.json({
+      primaryDir: uploadsDir,
+      tmpDir: tmpDir,
+      primaryFiles: files,
+      tmpFiles: tmpFiles,
+      environment: process.env.NODE_ENV,
+      cwd: process.cwd(),
+      msg: 'Check if your images are listed here. If yes, the server is storing them correctly.'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {

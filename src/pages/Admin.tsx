@@ -604,17 +604,39 @@ export default function Admin() {
             <div className="p-8 grid md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
               {/* Photo */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Animal Photo</h4>
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Animal Photo</h4>
+                  {selectedApp.photoUrl && (
+                    <a 
+                      href={selectedApp.photoUrl} 
+                      download 
+                      target="_blank" 
+                      className="text-[10px] text-primary hover:underline font-bold"
+                    >
+                      OPEN FULL
+                    </a>
+                  )}
+                </div>
                 {selectedApp.photoUrl ? (
-                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex items-center justify-center">
+                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex flex-col items-center justify-center relative group">
                     <img 
                       src={selectedApp.photoUrl} 
                       alt="Animal" 
-                      title={`Image source: ${selectedApp.photoUrl}`}
-                      className="w-full h-full object-contain cursor-help"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
-                        console.error('Failed to load image:', selectedApp.photoUrl);
-                        e.currentTarget.src = `https://placehold.co/600x400?text=Error+Loading+Image%0A${encodeURIComponent(selectedApp.photoUrl || '')}`;
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          const errorDiv = document.createElement('div');
+                          errorDiv.className = 'p-4 text-center space-y-2';
+                          errorDiv.innerHTML = `
+                            <p class="text-sm text-destructive font-bold">Image failed to load</p>
+                            <p class="text-[10px] text-muted-foreground break-all">URL: ${selectedApp.photoUrl}</p>
+                            <p class="text-[9px] bg-secondary p-1 rounded">Check if this file exists in /uploads</p>
+                          `;
+                          parent.appendChild(errorDiv);
+                        }
                       }}
                     />
                   </div>
@@ -627,17 +649,38 @@ export default function Admin() {
 
               {/* Ownership Proof */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ownership Proof</h4>
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ownership Proof</h4>
+                  {selectedApp.ownershipProofUrl && (
+                    <a 
+                      href={selectedApp.ownershipProofUrl} 
+                      download 
+                      target="_blank" 
+                      className="text-[10px] text-primary hover:underline font-bold"
+                    >
+                      OPEN FULL
+                    </a>
+                  )}
+                </div>
                 {selectedApp.ownershipProofUrl ? (
-                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex items-center justify-center">
+                  <div className="rounded-2xl border border-border overflow-hidden bg-stone-100 aspect-video flex flex-col items-center justify-center relative group">
                     <img 
                       src={selectedApp.ownershipProofUrl} 
                       alt="Proof" 
-                      title={`Image source: ${selectedApp.ownershipProofUrl}`}
-                      className="w-full h-full object-contain cursor-help"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
-                        console.error('Failed to load proof image:', selectedApp.ownershipProofUrl);
-                        e.currentTarget.src = `https://placehold.co/600x400?text=Error+Loading+Image%0A${encodeURIComponent(selectedApp.ownershipProofUrl || '')}`;
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          const errorDiv = document.createElement('div');
+                          errorDiv.className = 'p-4 text-center space-y-2';
+                          errorDiv.innerHTML = `
+                            <p class="text-sm text-destructive font-bold">Document failed to load</p>
+                            <p class="text-[10px] text-muted-foreground break-all">URL: ${selectedApp.ownershipProofUrl}</p>
+                          `;
+                          parent.appendChild(errorDiv);
+                        }
                       }}
                     />
                   </div>
