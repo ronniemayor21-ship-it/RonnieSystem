@@ -1,7 +1,7 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev:frontend": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js",
@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:all": "npm run dev",
     "db:setup": "cd server && node setup.js",
-    "build": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build && cd server && npm install",
+    "build": "echo 'Busting Render Cache' && node --max-old-space-size=4096 node_modules/vite/bin/vite.js build && cd server && npm install",
     "start": "node server/index.js",
     "build:dev": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build --mode development",
     "lint": "eslint .",

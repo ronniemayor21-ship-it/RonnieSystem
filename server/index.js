@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const db = require('./db');
 const fs = require('fs');
 require('dotenv').config();
@@ -12,26 +14,31 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Ensure uploads directory exists
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary Multer Storage — images go directly to Cloudinary, no local disk
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'livestox-care',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+  },
+});
+
+const upload = multer({ storage: storage });
+
+// Also keep local /uploads for any existing files (backwards compat)
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
-
 app.use('/uploads', express.static(uploadsDir));
-
-// Multer Config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'uploads/'))
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, uniqueSuffix + path.extname(file.originalname))
-  }
-});
-
-const upload = multer({ storage: storage });
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -42,12 +49,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// File Upload Endpoint
+// File Upload Endpoint — uploads to Cloudinary, returns a persistent URL
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).send('No file uploaded.');
   }
-  const fileUrl = `/uploads/${req.file.filename}`;
+  // Cloudinary gives us req.file.path which is the full https:// URL
+  const fileUrl = req.file.path;
   res.json({ url: fileUrl });
 });
 
